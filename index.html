@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pixel Battle</title>
+    <!-- Добавляем Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -223,9 +226,33 @@
             font-weight: bold;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
         }
+        
+        /* Добавляем стили для статуса подключения */
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+        
+        .connection-status.connected {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .connection-status.disconnected {
+            background-color: #f44336;
+            color: white;
+        }
     </style>
 </head>
 <body>
+    <!-- Индикатор подключения к Firebase -->
+    <div class="connection-status disconnected" id="connectionStatus">Отключено</div>
+    
     <header>
         <h1>Pixel Battle</h1>
     </header>
@@ -290,6 +317,7 @@
                     <li>Колесико мыши - масштабирование</li>
                     <li>Кулдаун: 1 секунда</li>
                     <li>Поле: 2000x1500 пикселей</li>
+                    <li>Общий холст для всех пользователей</li>
                 </ul>
             </div>
         </div>
@@ -308,6 +336,7 @@
             const canvas = document.getElementById('pixelCanvas');
             const ctx = canvas.getContext('2d');
             const canvasContainer = document.getElementById('canvasContainer');
+            const connectionStatus = document.getElementById('connectionStatus');
             
             // Переменные состояния
             let currentColor = '#ff0000';
@@ -332,6 +361,25 @@
             const canvasWidth = 2000;
             const canvasHeight = 1500;
 
+            // Firebase конфигурация
+            const firebaseConfig = {
+                apiKey: "AIzaSyCuc7ae2diIJD2XnwngSIsudB9fTbYrGVI",
+                authDomain: "pixelbattle-8ad67.firebaseapp.com",
+                databaseURL: "https://pixelbattle-8ad67-default-rtdb.firebaseio.com",
+                projectId: "pixelbattle-8ad67",
+                storageBucket: "pixelbattle-8ad67.firebasestorage.app",
+                messagingSenderId: "1002382702144",
+                appId: "1:1002382702144:web:6822d28c86985f4a7ad1a5"
+            };
+            
+            // Инициализация Firebase
+            firebase.initializeApp(firebaseConfig);
+            const database = firebase.database();
+            
+            // Ссылки на данные в Firebase
+            const pixelsRef = database.ref('pixels');
+            const statsRef = database.ref('stats');
+
             // Инициализация
             function init() {
                 // Очищаем холст и рисуем сетку
@@ -340,6 +388,7 @@
                 // Центрируем
                 centerViewport();
                 setupEventListeners();
+                setupFirebaseListeners();
                 updateStats();
                 updateCanvasPosition();
             }
@@ -382,6 +431,34 @@
                 }
             }
 
+            // Настройка слушателей Firebase
+            function setupFirebaseListeners() {
+                // Слушаем изменения в пикселях
+                pixelsRef.on('child_added', (snapshot) => {
+                    const pixelData = snapshot.val();
+                    drawPixelFromFirebase(pixelData.x, pixelData.y, pixelData.color);
+                });
+                
+                // Слушаем изменения в статистике
+                statsRef.on('value', (snapshot) => {
+                    const stats = snapshot.val();
+                    if (stats && stats.totalPixels) {
+                        document.getElementById('pixelCount').textContent = stats.totalPixels;
+                    }
+                });
+                
+                // Отслеживаем состояние подключения
+                database.ref('.info/connected').on('value', (snapshot) => {
+                    if (snapshot.val() === true) {
+                        connectionStatus.textContent = 'Подключено';
+                        connectionStatus.className = 'connection-status connected';
+                    } else {
+                        connectionStatus.textContent = 'Отключено';
+                        connectionStatus.className = 'connection-status disconnected';
+                    }
+                });
+            }
+
             // Преобразование координат экрана в координаты холста
             function screenToCanvas(screenX, screenY) {
                 const rect = canvasContainer.getBoundingClientRect();
@@ -407,18 +484,43 @@
                 lastPixelTime = now;
                 updateCooldownDisplay();
                 
-                // Рисуем пиксель на оригинальном холсте
+                // Рисуем пиксель на локальном холсте
                 ctx.fillStyle = currentColor;
                 ctx.fillRect(x, y, pixelSize, pixelSize);
                 
-                // НЕ перерисовываем сетку поверх пикселя!
-                // Пиксель рисуется поверх сетки, сохраняя четкие контуры
+                // Отправляем пиксель в Firebase
+                savePixelToFirebase(x, y, currentColor);
                 
                 // Обновляем статистику
                 pixelCount++;
                 updateStats();
                 
                 return true;
+            }
+            
+            // Функция для рисования пикселя из Firebase
+            function drawPixelFromFirebase(x, y, color) {
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y, pixelSize, pixelSize);
+            }
+            
+            // Сохранение пикселя в Firebase
+            function savePixelToFirebase(x, y, color) {
+                // Генерируем уникальный ключ для пикселя
+                const pixelKey = `${x}_${y}`;
+                
+                // Сохраняем пиксель в Firebase
+                pixelsRef.child(pixelKey).set({
+                    x: x,
+                    y: y,
+                    color: color,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                // Обновляем общую статистику
+                statsRef.child('totalPixels').transaction((current) => {
+                    return (current || 0) + 1;
+                });
             }
 
             function updateCooldownDisplay() {
@@ -444,7 +546,6 @@
             }
 
             function updateStats() {
-                document.getElementById('pixelCount').textContent = pixelCount;
                 document.getElementById('currentColor').textContent = currentColor;
             }
 
