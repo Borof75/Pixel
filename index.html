@@ -1,655 +1,562 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pixel Battle</title>
-    <!-- Добавляем Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Courier New', monospace;
-            image-rendering: pixelated;
-        }
-        
-        body {
-            background-color: #f5f5f5;
-            color: #333;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        
-        header {
-            padding: 20px;
-            background: white;
-            border-bottom: 3px solid #333;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        h1 {
-            font-size: 2.5rem;
-            font-weight: bold;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #333;
-            text-shadow: 2px 2px 0 #ddd;
-        }
-        
-        .container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-        
-        .controls {
-            width: 250px;
-            padding: 20px;
-            background: white;
-            border-right: 3px solid #333;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
-        }
-        
-        .section {
-            background: #f9f9f9;
-            border: 2px solid #333;
-            padding: 15px;
-            border-radius: 0;
-        }
-        
-        .section h3 {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            color: #333;
-            border-bottom: 2px solid #333;
-            padding-bottom: 5px;
-        }
-        
-        .mode-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        .mode-btn {
-            flex: 1;
-            padding: 10px;
-            border: 2px solid #333;
-            background: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.1s;
-            text-align: center;
-        }
-        
-        .mode-btn.active {
-            background: #333;
-            color: white;
-        }
-        
-        .mode-btn:hover {
-            background: #555;
-            color: white;
-        }
-        
-        .color-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .color-option {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #333;
-            cursor: pointer;
-            transition: transform 0.1s;
-        }
-        
-        .color-option:hover {
-            transform: scale(1.1);
-        }
-        
-        .color-option.active {
-            border: 2px solid #333;
-            box-shadow: 0 0 0 2px white, 0 0 0 4px #333;
-        }
-        
-        .custom-color {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        #customColor {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #333;
-            cursor: pointer;
-            background: white;
-        }
-        
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-        
-        .stat-value {
-            color: #e74c3c;
-        }
-        
-        .cooldown-container {
-            margin-top: 10px;
-        }
-        
-        .cooldown-bar {
-            height: 20px;
-            background-color: #ddd;
-            border: 2px solid #333;
-            border-radius: 0;
-            overflow: hidden;
-            margin-top: 5px;
-        }
-        
-        .cooldown-progress {
-            height: 100%;
-            background-color: #e74c3c;
-            width: 0%;
-            transition: width 0.1s;
-        }
-        
-        .instructions {
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-        
-        .instructions ul {
-            padding-left: 20px;
-            margin-top: 10px;
-        }
-        
-        .instructions li {
-            margin-bottom: 8px;
-            position: relative;
-        }
-        
-        .instructions li:before {
-            content: "■";
-            position: absolute;
-            left: -15px;
-            color: #e74c3c;
-        }
-        
-        .canvas-container {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            background-color: #e0e0e0;
-        }
-        
-        #pixelCanvas {
-            position: absolute;
-            background-color: white;
-            cursor: crosshair;
-        }
-        
-        .canvas-container.pan-mode {
-            cursor: grab;
-        }
-        
-        .canvas-container.pan-mode.dragging {
-            cursor: grabbing;
-        }
-        
-        .canvas-container.paint-mode {
-            cursor: crosshair;
-        }
-        
-        footer {
-            padding: 15px 20px;
-            background: white;
-            border-top: 3px solid #333;
-            text-align: center;
-            font-weight: bold;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        }
-        
-        /* Добавляем стили для статуса подключения */
-        .connection-status {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            z-index: 1000;
-        }
-        
-        .connection-status.connected {
-            background-color: #4CAF50;
-            color: white;
-        }
-        
-        .connection-status.disconnected {
-            background-color: #f44336;
-            color: white;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>🏥 Медицинский портал | Отправка отчётов</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+    }
+    body {
+      background: #f5f0f0;
+      background-image: 
+        linear-gradient(rgba(200, 40, 40, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(200, 40, 40, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+      padding: 20px;
+      margin: 0;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 32px;
+      box-shadow: 0 20px 40px rgba(180, 30, 30, 0.15), 0 4px 12px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 800px;
+      padding: 32px 28px 36px;
+      transition: all 0.2s;
+      color: #2c2c2c;
+      border: 1px solid #ffcdcd;
+    }
+    h1 {
+      font-weight: 600;
+      font-size: 2.2rem;
+      letter-spacing: -0.5px;
+      margin: 0 0 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 3px solid #e63946;
+      padding-bottom: 20px;
+      color: #a4161a;
+    }
+    h1 .med-icon {
+      background: #e63946;
+      color: white;
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+    }
+    .secure-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff5f5;
+      padding: 14px 22px;
+      border-radius: 20px;
+      margin: 20px 0 24px;
+      border-left: 6px solid #e63946;
+      color: #a4161a;
+      font-weight: 500;
+      box-shadow: 0 2px 6px rgba(230, 57, 70, 0.1);
+    }
+    .secure-badge span:first-child {
+      font-size: 1.8rem;
+    }
+    .selector-area {
+      margin-bottom: 30px;
+    }
+    .selector-area label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: #a4161a;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+      letter-spacing: 0.8px;
+    }
+    select {
+      width: 100%;
+      padding: 16px 22px;
+      background: #ffffff;
+      border: 2px solid #e0b3b3;
+      border-radius: 20px;
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #2c2c2c;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"><path fill="%23e63946" d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 22px center;
+      background-size: 22px;
+      transition: 0.2s;
+    }
+    select:hover {
+      border-color: #e63946;
+      background-color: #fffbfb;
+    }
+    select:focus {
+      border-color: #e63946;
+      box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.15);
+    }
+    .form-container {
+      background: #fefbfb;
+      border-radius: 28px;
+      padding: 24px 22px 22px;
+      border: 1px solid #f0c0c0;
+      margin-bottom: 30px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .dynamic-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .field-group label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #a4161a;
+      letter-spacing: 0.2px;
+      margin-left: 6px;
+    }
+    .field-group input, .field-group textarea, .field-group select {
+      background: #ffffff;
+      border: 2px solid #e6c3c3;
+      border-radius: 18px;
+      padding: 14px 20px;
+      font-size: 1rem;
+      color: #1e1e1e;
+      outline: none;
+      transition: all 0.2s;
+      font-family: inherit;
+      resize: vertical;
+    }
+    .field-group textarea {
+      min-height: 110px;
+    }
+    .field-group input:focus, .field-group textarea:focus, .field-group select:focus {
+      border-color: #e63946;
+      box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.1);
+      background: #fffafa;
+    }
+    .field-group input::placeholder, .field-group textarea::placeholder {
+      color: #b99a9a;
+      font-weight: 300;
+    }
+    .row-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .action-bar {
+      display: flex;
+      justify-content: flex-end;
+      gap: 18px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      background: #ffffff;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 48px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #a4161a;
+      border: 2px solid #e0b3b3;
+      cursor: pointer;
+      transition: 0.2s;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.03);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-primary {
+      background: #e63946;
+      border: 2px solid #e63946;
+      color: white;
+      box-shadow: 0 10px 18px rgba(230, 57, 70, 0.25);
+      flex: 1;
+      justify-content: center;
+    }
+    .btn-primary:hover {
+      background: #c72e3b;
+      border-color: #c72e3b;
+      transform: scale(1.01);
+      box-shadow: 0 12px 22px rgba(200, 40, 50, 0.3);
+    }
+    .btn-secondary {
+      background: white;
+      border: 2px solid #d49b9b;
+      color: #8b3a3a;
+    }
+    .btn-secondary:hover {
+      background: #fff0f0;
+      border-color: #e63946;
+    }
+    .status {
+      margin-top: 26px;
+      padding: 16px 22px;
+      border-radius: 48px;
+      background: #fef6f6;
+      text-align: center;
+      font-weight: 500;
+      color: #a4161a;
+      border-left: 8px solid #e63946;
+      font-size: 1rem;
+      word-break: break-word;
+      box-shadow: 0 2px 8px rgba(230,57,70,0.08);
+    }
+    .badge {
+      background: #ffe6e6;
+      padding: 6px 16px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      color: #b11d1d;
+      font-weight: 600;
+      border: 1px solid #f3b3b3;
+    }
+    .footnote {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 16px;
+      text-align: right;
+      color: #7a5a5a;
+      font-style: italic;
+    }
+    .cross-icon {
+      background: #e63946;
+      color: white;
+      border-radius: 30px;
+      padding: 4px 10px;
+      font-size: 1rem;
+    }
+  </style>
 </head>
 <body>
-    <!-- Индикатор подключения к Firebase -->
-    <div class="connection-status disconnected" id="connectionStatus">Отключено</div>
-    
-    <header>
-        <h1>Pixel Battle</h1>
-    </header>
-    
-    <div class="container">
-        <div class="controls">
-            <div class="section">
-                <h3>Режим</h3>
-                <div class="mode-selector">
-                    <button class="mode-btn active" id="paintModeBtn">Рисование</button>
-                    <button class="mode-btn" id="panModeBtn">Перемещение</button>
-                </div>
-                
-                <h3>Выберите цвет</h3>
-                <div class="color-grid">
-                    <div class="color-option active" style="background-color: #ff0000;" data-color="#ff0000"></div>
-                    <div class="color-option" style="background-color: #00ff00;" data-color="#00ff00"></div>
-                    <div class="color-option" style="background-color: #0000ff;" data-color="#0000ff"></div>
-                    <div class="color-option" style="background-color: #ffff00;" data-color="#ffff00"></div>
-                    <div class="color-option" style="background-color: #ff00ff;" data-color="#ff00ff"></div>
-                    <div class="color-option" style="background-color: #00ffff;" data-color="#00ffff"></div>
-                    <div class="color-option" style="background-color: #ffffff;" data-color="#ffffff"></div>
-                    <div class="color-option" style="background-color: #000000;" data-color="#000000"></div>
-                    <div class="color-option" style="background-color: #ff8a00;" data-color="#ff8a00"></div>
-                    <div class="color-option" style="background-color: #e52e71;" data-color="#e52e71"></div>
-                    <div class="color-option" style="background-color: #4c00ff;" data-color="#4c00ff"></div>
-                    <div class="color-option" style="background-color: #00ff88;" data-color="#00ff88"></div>
-                </div>
-                
-                <div class="custom-color">
-                    <input type="color" id="customColor" value="#ff0000">
-                    <span>Свой цвет</span>
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3>Статистика</h3>
-                <div class="stat-item">
-                    <span>Пикселей:</span>
-                    <span class="stat-value" id="pixelCount">0</span>
-                </div>
-                <div class="stat-item">
-                    <span>Текущий цвет:</span>
-                    <span class="stat-value" id="currentColor">#ff0000</span>
-                </div>
-                <div class="stat-item">
-                    <span>Кулдаун:</span>
-                    <span class="stat-value" id="cooldownText">Готов</span>
-                </div>
-                <div class="cooldown-container">
-                    <div class="cooldown-bar">
-                        <div class="cooldown-progress" id="cooldownProgress"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section instructions">
-                <h3>Управление</h3>
-                <ul>
-                    <li>Режим рисования - ставить пиксели</li>
-                    <li>Режим перемещения - двигать холст</li>
-                    <li>Колесико мыши - масштабирование</li>
-                    <li>Кулдаун: 1 секунда</li>
-                    <li>Поле: 2000x1500 пикселей</li>
-                    <li>Общий холст для всех пользователей</li>
-                </ul>
-            </div>
-        </div>
-        
-        <div class="canvas-container paint-mode" id="canvasContainer">
-            <canvas id="pixelCanvas" width="2000" height="1500"></canvas>
-        </div>
+<div class="card">
+  <h1>
+    <span class="med-icon">🏥</span> 
+    МЕДИЦИНСКИЙ ПОРТАЛ
+    <span class="badge">🔒 защищённый канал</span>
+  </h1>
+
+  <!-- Индикатор безопасности (вместо поля ввода) -->
+  <div class="secure-badge">
+    <span>🩺</span> 
+    <span>На случай отказа гугл форм.</span>
+  </div>
+
+  <!-- Выбор формы -->
+  <div class="selector-area">
+    <label>📋 ВЫБЕРИТЕ ТИП ОТЧЁТА</label>
+    <select id="formSelector"></select>
+  </div>
+
+  <!-- Динамическая форма -->
+  <div class="form-container">
+    <div id="dynamicForm" class="dynamic-form">
+      <!-- поля генерируются здесь -->
     </div>
-    
-    <footer>
-        <p>Pixel Battle &copy; 2023 | Пиксельное искусство</p>
-    </footer>
+  </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const canvas = document.getElementById('pixelCanvas');
-            const ctx = canvas.getContext('2d');
-            const canvasContainer = document.getElementById('canvasContainer');
-            const connectionStatus = document.getElementById('connectionStatus');
-            
-            // Переменные состояния
-            let currentColor = '#ff0000';
-            let pixelCount = 0;
-            let isOnCooldown = false;
-            let cooldownTime = 1000;
-            let lastPixelTime = 0;
-            let currentMode = 'paint';
-            
-            // Переменные для камеры
-            let viewport = {
-                x: 0,
-                y: 0,
-                scale: 1
-            };
-            
-            let isDragging = false;
-            let dragStart = { x: 0, y: 0 };
-            let viewportStart = { x: 0, y: 0 };
-            
-            const pixelSize = 10;
-            const canvasWidth = 2000;
-            const canvasHeight = 1500;
+  <!-- Кнопки действий -->
+  <div class="action-bar">
+    <button class="btn btn-primary" id="sendBtn">📤 Отправить отчёт</button>
+    <button class="btn btn-secondary" id="clearBtn">🧽 Сбросить</button>
+  </div>
+  
+  <!-- Статус -->
+  <div class="status" id="statusMessage">
+    ⚕️ Готов к работе. Выберите форму и заполните данные.
+  </div>
+  <div class="footnote">* Данные передаются по защищённым вебхукам (скрыто).</div>
+</div>
 
-            // Firebase конфигурация
-            const firebaseConfig = {
-                apiKey: "AIzaSyCuc7ae2diIJD2XnwngSIsudB9fTbYrGVI",
-                authDomain: "pixelbattle-8ad67.firebaseapp.com",
-                databaseURL: "https://pixelbattle-8ad67-default-rtdb.firebaseio.com",
-                projectId: "pixelbattle-8ad67",
-                storageBucket: "pixelbattle-8ad67.firebasestorage.app",
-                messagingSenderId: "1002382702144",
-                appId: "1:1002382702144:web:6822d28c86985f4a7ad1a5"
-            };
-            
-            // Инициализация Firebase
-            firebase.initializeApp(firebaseConfig);
-            const database = firebase.database();
-            
-            // Ссылки на данные в Firebase
-            const pixelsRef = database.ref('pixels');
-            const statsRef = database.ref('stats');
+<script>
+  (function(){
+    "use strict";
 
-            // Инициализация
-            function init() {
-                // Очищаем холст и рисуем сетку
-                drawGrid();
-                
-                // Центрируем
-                centerViewport();
-                setupEventListeners();
-                setupFirebaseListeners();
-                updateStats();
-                updateCanvasPosition();
-            }
+    // ---------- 🔒 СКРЫТЫЕ URL ВЕБХУКОВ (ЗАМЕНИТЕ НА РЕАЛЬНЫЕ) ----------
+    const WEBHOOK_SECRETS = {
+      1: "https://discord.com/api/webhooks/1496642099855233155/2CgrO-9cIIh7yXJY7ZajQ6mzOI3m53KRT70lT0rz8WNgsflSYP7Wyocp4Rr75qnnKgJg",
+      2: "https://discord.com/api/webhooks/1496642197041315940/77npHiSIT0YegPaB5QQGXAki4HtmaLC7rIFZYDYm4tMreEIRFwLD-875q8VpImYFPmZa",
+      3: "https://discord.com/api/webhooks/1496642324334116969/APT1flLEcUH1Bceqi7lPxST4dKCKxIKBlYRLfDE_3ns4sDZ2n9bkzG3iDQPb4vOfiBK9",
+      4: "https://discord.com/api/webhooks/1496642435215003648/EhSOyC9NxzZmH2wl06ajEgq-Btjh09sYpiAR5v_UvU4tKeI7WeAnmthFhl-jYIap71uV",
+      5: "https://discord.com/api/webhooks/1496642552567431228/1Rtb2_Sf_aUzaVXYSxhzTRjv7RKTrUCGrwkmKMilXfJ6hx4yu9WghcLRmmj4BEVVYCSS",
+      6: "https://discord.com/api/webhooks/1496642647895441578/fx_8waKfM3MpSucyP79wCt6_OyPam283LzAFNvPxroC8U7LcKLGx93ILvXoNOBYTg1Yw",
+      7: "https://discord.com/api/webhooks/1496642786215202947/46iPQJjtGAwApS_n7A2CpANCtGKA3M6aWMdSRFsd-xHVSl66DvEa24fIq-nbkshBhZDa",
+      8: "https://discord.com/api/webhooks/1496642871628009483/tU4fbnt8a8vIpDYSdTdmnC8ApB0Hr3Wtlud30lKJi6MtUIAjin87Z18Beb22mtYiRUQ4",
+      9: "https://discord.com/api/webhooks/1352654798765432921/замените_на_реальный_url_для_предложений",
+      10: "https://discord.com/api/webhooks/1352654798765432922/замените_на_реальный_url_для_дефектности"
+    };
 
-            function centerViewport() {
-                viewport.x = (canvasContainer.clientWidth - canvasWidth * viewport.scale) / 2;
-                viewport.y = (canvasContainer.clientHeight - canvasHeight * viewport.scale) / 2;
-            }
+    // ---------- КОНФИГУРАЦИЯ ФОРМ ----------
+    const FORM_TYPES = [
+      { id: 1, name: '[1] Форма запроса на Отпуск' },
+      { id: 2, name: '[2] Форма отчетов Взысканий' },
+      { id: 3, name: '[3] Форма отчетов Мед.Комиссия' },
+      { id: 4, name: '[4] Форма отчетов Дежурства' },
+      { id: 5, name: '[5] Форма отчетов Мед.Деятельности' },
+      { id: 6, name: '[6] Форма отчетов Тренировок' },
+      { id: 7, name: '[7] Форма отчетов Спец.Операций' },
+      { id: 8, name: '[8] Форма отчетов Лекций/Зачетов/Практик' },
+    ];
 
-            function updateCanvasPosition() {
-                canvas.style.left = viewport.x + 'px';
-                canvas.style.top = viewport.y + 'px';
-                canvas.style.width = (canvasWidth * viewport.scale) + 'px';
-                canvas.style.height = (canvasHeight * viewport.scale) + 'px';
-            }
+    // Поля (медицинский акцент в некоторых названиях)
+    const FIELDS_MAP = {
+      1: [ 
+        { name: 'fullName', label: 'Докладывает', type: 'text', placeholder: 'Н|П|З', required: true },
+        { name: 'startDate', label: 'Дата начала отпуска', type: 'date', required: true },
+        { name: 'endDate', label: 'Дата окончания', type: 'date', required: true },
+        { name: 'reason', label: 'Причина', type: 'textarea', placeholder: '...', rows: 2 }
+      ],
+      2: [ 
+        { name: 'employee', label: 'Докладывает', type: 'text', required: true },
+        { name: 'department', label: 'Нарушитель', type: 'text', required: true },
+        { name: 'violation', label: 'Нарушение', type: 'text', required: true },
+        { name: 'penaltyType', label: 'Вид взыскания', type: 'select', options: ['Взыскание'], required: true },
+        { name: 'date', label: 'Дата', type: 'date', required: true },
+        { name: 'details', label: 'Суть наказания', type: 'textarea', rows: 2 }
+      ],
+      3: [ 
+        { name: 'doctor1', label: 'Докладывает боец', type: 'text' },
+        { name: 'doctor2', label: 'Провел  медицинскую комиссию следующему бойцу', type: 'text' },
+        { name: 'doctor3', label: 'Проверка знаний', type: 'text' },
+        { name: 'doctor4', label: 'Хронические заболевания', type: 'text' },
+        { name: 'doctor5', label: 'Протезы/Импланты', type: 'text' },
+        { name: 'doctor6', label: 'Рост', type: 'text' },
+        { name: 'doctor7', label: 'Вес', type: 'text' },
+        { name: 'doctor8', label: 'Цвет глаз и реакция на свет', type: 'text' },
+        { name: 'doctor9', label: 'Способность к физическим нагрузкам', type: 'text' },
+        { name: 'doctor10', label: 'Кожный Покров', type: 'text' },
+        { name: 'doctor11', label: 'Итог', type: 'text' }
+      ],
+      4: [ 
+        { name: 'shiftDate', label: 'Дата дежурства', type: 'date', required: true },
+        { name: 'shiftLead', label: 'Разводящий', type: 'text', required: true },
+        { name: 'shiftLead', label: 'Место дежурства', type: 'text', required: true },
+        { name: 'personnel', label: 'Состав дежурства', type: 'textarea', placeholder: 'Перечислите НПЗ', rows: 2 },
+        { name: 'incidents', label: 'Поручения', type: 'textarea', rows: 2 },
+        { name: 'handover', label: 'Начало-Конец', type: 'text' }
+      ],
+      5: [ 
+        { name: 'notes', label: 'Докладывает', type: 'text' },
+        { name: 'penaltyType', label: 'Вид деятельности', type: 'select', options: ['Мед. помощь', 'Создание Мед.препаратов', 'Сбор ингр', 'Операция', 'Семинар', 'Внеплан осмотр', 'Плановый осмотр'], required: true },
+        { name: 'notes', label: 'Описание деятельности', type: 'text' },
+        { name: 'procedures', label: 'Участники', type: 'textarea', rows: 2 },
+        { name: 'notes1', label: 'Примечания', type: 'text' }
+      ],
+      6: [ 
+        { name: 'trainingName', label: 'Докладывает', type: 'text', required: true },
+        { name: 'trainer', label: 'Название тренировки', type: 'text', required: true },
+        { name: 'date', label: 'Дата проведения', type: 'date', required: true },
+        { name: 'participants', label: 'Участники (кол-во / состав)', type: 'textarea', rows: 2 },
+        { name: 'result', label: 'Суть тренировки', type: 'text' }
+      ],
+      7: [ 
+        { name: 'operationCode', label: 'Название операции', type: 'text', required: true },
+        { name: 'date', label: 'Дата', type: 'date', required: true },
+        { name: 'commander', label: 'Командовал', type: 'text', required: true },
+        { name: 'objective', label: 'Состав', type: 'textarea', rows: 2 },
+        { name: 'outcome', label: 'Описание', type: 'textarea', rows: 2 },
+        { name: 'status', label: 'Статус', type: 'select', options: ['Победа ВАР', 'Поражение ВАР'] }
+      ],
+      8: [ 
+        { name: 'eventType', label: 'Тип', type: 'select', options: ['Лекция', 'Зачет', 'Практика'], required: true },
+        { name: 'status', label: 'Название', type: 'select', options: ['Вступительное ознакомление', 'КОМ и ОСМ', 'Ведение Мед.Карт', 'Командование отрядом', 'Внештатные ситуации', 'Распределение и командование отрядом на СО', 'Курс Интернатуры', 'Курс Ординатуры', 'Курс Военфельдшера', 'Академия МК', 'Положение о несении дежурства', 'Положение о санитарной деятельности', 'Тест по "Устав МК"', 'Зачет по мед знаниям', 'Школа Командования отрядом', 'Операционная деятельность', 'Маневры и знания против Зергов', 'Зачёт по развёртыванию ВПГ'] },
+        { name: 'lecturer', label: 'Проводящий', type: 'text', required: true },
+        { name: 'date', label: 'Дата', type: 'date', required: true },
+        { name: 'group', label: 'Номер лекции/практики', type: 'text' },
+        { name: 'group', label: 'Проходящий', type: 'text' },
+        { name: 'eventType1', label: 'Итог', type: 'select', options: ['Сдано', 'Провалено'], required: true }
+      ],
+    };
 
-            function drawGrid() {
-                // Очищаем холст белым
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Рисуем тонкие черные линии сетки
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 1;
-                
-                // Вертикальные линии
-                for (let x = 0; x <= canvas.width; x += pixelSize) {
-                    ctx.beginPath();
-                    ctx.moveTo(x, 0);
-                    ctx.lineTo(x, canvas.height);
-                    ctx.stroke();
-                }
-                
-                // Горизонтальные линии
-                for (let y = 0; y <= canvas.height; y += pixelSize) {
-                    ctx.beginPath();
-                    ctx.moveTo(0, y);
-                    ctx.lineTo(canvas.width, y);
-                    ctx.stroke();
-                }
-            }
+    // DOM элементы
+    const formSelector = document.getElementById('formSelector');
+    const dynamicFormDiv = document.getElementById('dynamicForm');
+    const statusDiv = document.getElementById('statusMessage');
+    const sendBtn = document.getElementById('sendBtn');
+    const clearBtn = document.getElementById('clearBtn');
 
-            // Настройка слушателей Firebase
-            function setupFirebaseListeners() {
-                // Слушаем изменения в пикселях
-                pixelsRef.on('child_added', (snapshot) => {
-                    const pixelData = snapshot.val();
-                    drawPixelFromFirebase(pixelData.x, pixelData.y, pixelData.color);
-                });
-                
-                // Слушаем изменения в статистике
-                statsRef.on('value', (snapshot) => {
-                    const stats = snapshot.val();
-                    if (stats && stats.totalPixels) {
-                        document.getElementById('pixelCount').textContent = stats.totalPixels;
-                    }
-                });
-                
-                // Отслеживаем состояние подключения
-                database.ref('.info/connected').on('value', (snapshot) => {
-                    if (snapshot.val() === true) {
-                        connectionStatus.textContent = 'Подключено';
-                        connectionStatus.className = 'connection-status connected';
-                    } else {
-                        connectionStatus.textContent = 'Отключено';
-                        connectionStatus.className = 'connection-status disconnected';
-                    }
-                });
-            }
+    // Заполнить селектор
+    FORM_TYPES.forEach(ft => {
+      const opt = document.createElement('option');
+      opt.value = ft.id;
+      opt.textContent = ft.name;
+      formSelector.appendChild(opt);
+    });
 
-            // Преобразование координат экрана в координаты холста
-            function screenToCanvas(screenX, screenY) {
-                const rect = canvasContainer.getBoundingClientRect();
-                const x = (screenX - rect.left - viewport.x) / viewport.scale;
-                const y = (screenY - rect.top - viewport.y) / viewport.scale;
-                return { x, y };
-            }
+    function renderFormById(id) {
+      const fields = FIELDS_MAP[id] || [];
+      if (!fields.length) {
+        dynamicFormDiv.innerHTML = `<div style="padding:20px;text-align:center">⚠️ Нет описания полей</div>`;
+        return;
+      }
+      let html = '';
+      for (let field of fields) {
+        const requiredStar = field.required ? ' *' : '';
+        if (field.type === 'textarea') {
+          html += `<div class="field-group">
+            <label>${field.label}${requiredStar}</label>
+            <textarea name="${field.name}" placeholder="${field.placeholder || ''}" rows="${field.rows || 3}"></textarea>
+          </div>`;
+        } else if (field.type === 'select') {
+          let optionsHtml = '';
+          (field.options || []).forEach(opt => { optionsHtml += `<option value="${opt}">${opt}</option>`; });
+          html += `<div class="field-group">
+            <label>${field.label}${requiredStar}</label>
+            <select name="${field.name}">${optionsHtml}</select>
+          </div>`;
+        } else if (field.type === 'date') {
+          html += `<div class="field-group">
+            <label>${field.label}${requiredStar}</label>
+            <input type="date" name="${field.name}" value="">
+          </div>`;
+        } else if (field.type === 'number') {
+          html += `<div class="field-group">
+            <label>${field.label}${requiredStar}</label>
+            <input type="number" name="${field.name}" placeholder="${field.placeholder || ''}">
+          </div>`;
+        } else { 
+          html += `<div class="field-group">
+            <label>${field.label}${requiredStar}</label>
+            <input type="text" name="${field.name}" placeholder="${field.placeholder || ''}">
+          </div>`;
+        }
+      }
+      dynamicFormDiv.innerHTML = html;
+    }
 
-            function getPixelCoordinates(canvasX, canvasY) {
-                return {
-                    x: Math.floor(canvasX / pixelSize) * pixelSize,
-                    y: Math.floor(canvasY / pixelSize) * pixelSize
-                };
-            }
+    formSelector.value = '1';
+    renderFormById(1);
 
-            function drawPixel(x, y) {
-                if (x < 0 || x >= canvasWidth || y < 0 || y >= canvasHeight) return false;
-                
-                const now = Date.now();
-                if (isOnCooldown) return false;
-                
-                isOnCooldown = true;
-                lastPixelTime = now;
-                updateCooldownDisplay();
-                
-                // Рисуем пиксель на локальном холсте
-                ctx.fillStyle = currentColor;
-                ctx.fillRect(x, y, pixelSize, pixelSize);
-                
-                // Отправляем пиксель в Firebase
-                savePixelToFirebase(x, y, currentColor);
-                
-                // Обновляем статистику
-                pixelCount++;
-                updateStats();
-                
-                return true;
-            }
-            
-            // Функция для рисования пикселя из Firebase
-            function drawPixelFromFirebase(x, y, color) {
-                ctx.fillStyle = color;
-                ctx.fillRect(x, y, pixelSize, pixelSize);
-            }
-            
-            // Сохранение пикселя в Firebase
-            function savePixelToFirebase(x, y, color) {
-                // Генерируем уникальный ключ для пикселя
-                const pixelKey = `${x}_${y}`;
-                
-                // Сохраняем пиксель в Firebase
-                pixelsRef.child(pixelKey).set({
-                    x: x,
-                    y: y,
-                    color: color,
-                    timestamp: firebase.database.ServerValue.TIMESTAMP
-                });
-                
-                // Обновляем общую статистику
-                statsRef.child('totalPixels').transaction((current) => {
-                    return (current || 0) + 1;
-                });
-            }
+    formSelector.addEventListener('change', (e) => {
+      renderFormById(parseInt(e.target.value));
+    });
 
-            function updateCooldownDisplay() {
-                if (!isOnCooldown) {
-                    document.getElementById('cooldownText').textContent = "Готов";
-                    document.getElementById('cooldownProgress').style.width = "0%";
-                    return;
-                }
-                
-                const now = Date.now();
-                const elapsed = now - lastPixelTime;
-                const progress = Math.min(elapsed / cooldownTime, 1);
-                
-                document.getElementById('cooldownProgress').style.width = `${progress * 100}%`;
-                
-                if (progress >= 1) {
-                    isOnCooldown = false;
-                    document.getElementById('cooldownText').textContent = "Готов";
-                } else {
-                    document.getElementById('cooldownText').textContent = `${((cooldownTime - elapsed) / 1000).toFixed(1)}s`;
-                    requestAnimationFrame(updateCooldownDisplay);
-                }
-            }
+    function clearFormFields() {
+      const inputs = dynamicFormDiv.querySelectorAll('input, textarea, select');
+      inputs.forEach(el => {
+        if (el.type === 'select-one') el.selectedIndex = 0;
+        else if (el.type === 'date') el.value = '';
+        else el.value = '';
+      });
+      statusDiv.innerHTML = '🧽 Поля очищены.';
+    }
+    clearBtn.addEventListener('click', clearFormFields);
 
-            function updateStats() {
-                document.getElementById('currentColor').textContent = currentColor;
-            }
+    function collectFormData() {
+      const fields = FIELDS_MAP[parseInt(formSelector.value)] || [];
+      const data = {};
+      fields.forEach(f => {
+        const element = dynamicFormDiv.querySelector(`[name="${f.name}"]`);
+        if (element) {
+          let value = element.value;
+          if (f.type === 'date' && value === '') value = 'не указана';
+          data[f.name] = value || '(не заполнено)';
+        } else {
+          data[f.name] = '';
+        }
+      });
+      return data;
+    }
 
-            function setMode(mode) {
-                currentMode = mode;
-                document.getElementById('paintModeBtn').classList.toggle('active', mode === 'paint');
-                document.getElementById('panModeBtn').classList.toggle('active', mode === 'pan');
-                canvasContainer.className = `canvas-container ${mode}-mode`;
-                isDragging = false;
-            }
+    function validateRequired() {
+      const fields = FIELDS_MAP[parseInt(formSelector.value)] || [];
+      for (let f of fields) {
+        if (!f.required) continue;
+        const el = dynamicFormDiv.querySelector(`[name="${f.name}"]`);
+        if (!el) continue;
+        const val = el.value.trim();
+        if (!val) {
+          statusDiv.innerHTML = `⚠️ Заполните обязательное поле: "${f.label}"`;
+          el.focus();
+          return false;
+        }
+      }
+      return true;
+    }
 
-            function setupEventListeners() {
-                // Выбор цвета
-                document.querySelectorAll('.color-option').forEach(option => {
-                    option.addEventListener('click', function() {
-                        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
-                        this.classList.add('active');
-                        currentColor = this.getAttribute('data-color');
-                        document.getElementById('customColor').value = currentColor;
-                        updateStats();
-                    });
-                });
+    async function sendToWebhook() {
+      const formId = parseInt(formSelector.value);
+      const webhookUrl = WEBHOOK_SECRETS[formId];
+      
+      if (!webhookUrl || webhookUrl.includes('замените_на_реальный_url')) {
+        statusDiv.innerHTML = '❌ Ошибка: для этой формы не задан корректный вебхук (замените заглушку в коде).';
+        return;
+      }
 
-                document.getElementById('customColor').addEventListener('input', function() {
-                    currentColor = this.value;
-                    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
-                    updateStats();
-                });
+      if (!validateRequired()) return;
 
-                // Режимы
-                document.getElementById('paintModeBtn').addEventListener('click', () => setMode('paint'));
-                document.getElementById('panModeBtn').addEventListener('click', () => setMode('pan'));
+      const formName = FORM_TYPES.find(ft => ft.id === formId)?.name || 'Неизвестная форма';
+      const formData = collectFormData();
+      
+      let description = '';
+      for (let [key, val] of Object.entries(formData)) {
+        const fieldConfig = FIELDS_MAP[formId]?.find(f => f.name === key);
+        const label = fieldConfig ? fieldConfig.label : key;
+        description += `**${label}**: ${val}\n`;
+      }
 
-                // События мыши
-                canvasContainer.addEventListener('mousedown', (e) => {
-                    if (e.button !== 0) return;
-                    
-                    if (currentMode === 'paint') {
-                        const canvasCoords = screenToCanvas(e.clientX, e.clientY);
-                        const pixelCoords = getPixelCoordinates(canvasCoords.x, canvasCoords.y);
-                        drawPixel(pixelCoords.x, pixelCoords.y);
-                    } else {
-                        isDragging = true;
-                        dragStart.x = e.clientX;
-                        dragStart.y = e.clientY;
-                        viewportStart.x = viewport.x;
-                        viewportStart.y = viewport.y;
-                        canvasContainer.classList.add('dragging');
-                    }
-                });
+      const payload = {
+        username: "🏥 Медицинский портал",
+        avatar_url: "https://i.imgur.com/q0zGBkE.png", // красный крест / медицина
+        embeds: [{
+          title: `📋 ${formName}`,
+          description: description || 'Нет данных',
+          color: 15158332, // красный
+          timestamp: new Date().toISOString(),
+          footer: { text: '🔒 Защищённый канал · Медстатистика' }
+        }]
+      };
 
-                canvasContainer.addEventListener('mousemove', (e) => {
-                    if (currentMode === 'pan' && isDragging) {
-                        const dx = e.clientX - dragStart.x;
-                        const dy = e.clientY - dragStart.y;
-                        
-                        viewport.x = viewportStart.x + dx;
-                        viewport.y = viewportStart.y + dy;
-                        
-                        updateCanvasPosition();
-                    }
-                });
-
-                canvasContainer.addEventListener('mouseup', () => {
-                    isDragging = false;
-                    canvasContainer.classList.remove('dragging');
-                });
-
-                canvasContainer.addEventListener('mouseleave', () => {
-                    isDragging = false;
-                    canvasContainer.classList.remove('dragging');
-                });
-
-                // Масштабирование
-                canvasContainer.addEventListener('wheel', (e) => {
-                    e.preventDefault();
-                    
-                    const rect = canvasContainer.getBoundingClientRect();
-                    const mouseX = e.clientX - rect.left;
-                    const mouseY = e.clientY - rect.top;
-                    
-                    const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
-                    const newScale = Math.min(Math.max(viewport.scale * zoomFactor, 0.1), 5);
-                    
-                    // Сохраняем позицию под курсором
-                    const worldX = (mouseX - viewport.x) / viewport.scale;
-                    const worldY = (mouseY - viewport.y) / viewport.scale;
-                    
-                    viewport.x = mouseX - worldX * newScale;
-                    viewport.y = mouseY - worldY * newScale;
-                    viewport.scale = newScale;
-                    
-                    updateCanvasPosition();
-                });
-
-                // Изменение размера окна
-                window.addEventListener('resize', () => {
-                    updateCanvasPosition();
-                });
-            }
-
-            // Запуск
-            init();
+      statusDiv.innerHTML = '⏳ Отправка отчёта...';
+      
+      try {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
-    </script>
+        
+        if (response.ok) {
+          statusDiv.innerHTML = `✅ Отчёт «${formName}» успешно отправлен! (${new Date().toLocaleTimeString()})`;
+        } else {
+          const text = await response.text();
+          throw new Error(`HTTP ${response.status}: ${text}`);
+        }
+      } catch (error) {
+        console.error(error);
+        statusDiv.innerHTML = `❌ Ошибка отправки: ${error.message}`;
+      }
+    }
+
+    sendBtn.addEventListener('click', sendToWebhook);
+
+    window.addEventListener('load', () => {
+      statusDiv.innerHTML = '🩺 Система готова. Вебхуки скрыты в коде.';
+    });
+
+  })();
+</script>
 </body>
 </html>
