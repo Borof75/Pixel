@@ -331,8 +331,9 @@
       2: [ 
         { name: 'employee', label: 'Докладывает', type: 'text', required: true },
         { name: 'department', label: 'Нарушитель', type: 'text', required: true },
+        { name: 'department1', label: 'Номер дела', type: 'text', required: true },
         { name: 'violation', label: 'Нарушение', type: 'text', required: true },
-        { name: 'penaltyType', label: 'Вид взыскания', type: 'select', options: ['Взыскание'], required: true },
+        { name: 'penaltyType', label: 'Вид рапорта', type: 'select', options: ['Выдача взыскания', 'Полная отработка наказания'], required: true },
         { name: 'date', label: 'Дата', type: 'date', required: true },
         { name: 'details', label: 'Суть наказания', type: 'textarea', rows: 2 }
       ],
