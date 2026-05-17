@@ -318,6 +318,8 @@
       { id: 6, name: '[6] Форма отчетов Тренировок' },
       { id: 7, name: '[7] Форма отчетов Спец.Операций' },
       { id: 8, name: '[8] Форма отчетов Лекций/Зачетов/Практик' },
+      { id: 9, name: '[9] Дефектность (Заключение)' },
+      { id: 10, name: '[10] Дефектность (Постановление)' },
     ];
 
     // Поля (медицинский акцент в некоторых названиях)
@@ -388,6 +390,24 @@
         { name: 'group', label: 'Номер лекции/практики', type: 'text' },
         { name: 'group1', label: 'Проходящий', type: 'text' },
         { name: 'eventType1', label: 'Итог', type: 'select', options: ['Сдано', 'Провалено'], required: true }
+      ],
+      9: [ 
+        { name: 'lecturer', label: 'Состав комиссии проводивший проверку', type: 'text', required: true },
+        { name: 'date', label: 'Дата', type: 'date', required: true },
+        { name: 'group1', label: 'Н|П|З проверяемого', type: 'text' },
+        { name: 'group2', label: 'Результаты психологической проверки', type: 'text' },
+        { name: 'group3', label: 'Внешние мутации/отклонения', type: 'select', options: ['Выявлено', 'Не выявлено'], required: true },
+        { name: 'group4', label: 'Внутренние мутации/отклонения', type: 'select', options: ['Выявлено', 'Не выявлено'], required: true },
+        { name: 'group5', label: 'Мутации мозга и ЦНС', type: 'select', options: ['Выявлено', 'Не выявлено'], required: true },
+        { name: 'eventType1', label: 'Итог', type: 'select', options: ['Зеленая степень', 'Желтая степень', 'Красная степень'], required: true }
+      ],
+      10: [ 
+        { name: 'lecturer', label: 'Состав комиссии проводивший проверку', type: 'text', required: true },
+        { name: 'date', label: 'Дата', type: 'date', required: true },
+        { name: 'group1', label: 'Подозрении на дефектность бойца (НПЗ)', type: 'text' },
+        { name: 'group2', label: 'На основе чего?', type: 'text' },
+        { name: 'group3', label: 'Назначена проверка', type: 'select', options: ['Полная', 'Физическая', 'Психологическая'], required: true },
+        { name: 'group4', label: 'Краткое описание выраженной дефектности', type: 'text' },
       ],
     };
 
