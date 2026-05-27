@@ -845,6 +845,27 @@
           return basePayload;
         }
 
+        if (formId === 12) {
+          basePayload.embeds.push({
+            title: "Рапорт для КМД",
+            color: EMBED_COLOR,
+            fields: [
+              field("Докладывает", data.reporter),
+              field("Дата", data.date, true),
+              field("Вид повышения", data.activity, true),
+              field("Позывной бойца", data.participants),
+              field("Старое звание/должность", data.interviewTarget),
+              field("Новое звание/должность", data.group),
+              field("Причина", data.group1),
+              field("SteamID", data.group2 || "—")
+            ],
+            footer: { text: getNowText() },
+            timestamp: new Date().toISOString()
+          });
+
+          return basePayload;
+        }
+
         const fields = Object.entries(data).map(([key, value]) => field(key, value));
 
         basePayload.embeds.push({
