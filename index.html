@@ -330,10 +330,9 @@
     (function () {
       "use strict";
 
-      // ВАЖНО:
-      // Сейчас это фронтенд-версия.
-      // Для настоящей безопасности вебхуки надо убрать на сервер.
-      // Пока вставь сюда новые вебхуки, старые лучше пересоздать.
+      const EMBED_COLOR = 0xd00000;
+      const BOT_USERNAME = "Медицинский дроид";
+      const BOT_AVATAR = "https://i.imgur.com/q0zGBkE.png";
 
       const WEBHOOK_SECRETS = {
       1: "https://discord.com/api/webhooks/1429875891625791611/1HPEvEBWlz2TPC_CsTFwnsvjQQyR_Nryvo8xUeFsSTiQmnOaVfECnP2iianPVABhSEWJ",
@@ -486,8 +485,8 @@
         return String(value ?? "")
           .replace(/@everyone/g, "@\u200beveryone")
           .replace(/@here/g, "@\u200bhere")
-          .replace(/<@/g, "<@\u200b")
           .replace(/<@&/g, "<@&\u200b")
+          .replace(/<@/g, "<@\u200b")
           .trim()
           .slice(0, maxLength);
       }
@@ -611,24 +610,12 @@
         };
       }
 
-      function getColorByResult(result) {
-        if (result === "Сдано") return 0x2ecc71;
-        if (result === "Провалено") return 0xe74c3c;
-        if (result === "Зеленая степень") return 0x2ecc71;
-        if (result === "Желтая степень") return 0xf1c40f;
-        if (result === "Красная степень") return 0xe74c3c;
-        if (result === "Победа ВАР") return 0x2ecc71;
-        if (result === "Поражение ВАР") return 0xe74c3c;
-
-        return 0xd00000;
-      }
-
       function buildPayload(formId, data) {
         const formName = FORM_TYPES.find((item) => item.id === formId)?.name || "Отчёт";
 
         const basePayload = {
-          username: "Медицинский дроид",
-          avatar_url: "https://i.imgur.com/q0zGBkE.png",
+          username: BOT_USERNAME,
+          avatar_url: BOT_AVATAR,
           allowed_mentions: {
             parse: []
           },
@@ -638,7 +625,7 @@
         if (formId === 1) {
           basePayload.embeds.push({
             title: "Рапорт об отпуске",
-            color: 0xd00000,
+            color: EMBED_COLOR,
             fields: [
               field("Докладывает", data.fullName),
               field("Дата начала отпуска", data.startDate, true),
@@ -655,7 +642,7 @@
         if (formId === 2) {
           basePayload.embeds.push({
             title: "Рапорт о взыскании",
-            color: 0xd00000,
+            color: EMBED_COLOR,
             fields: [
               field("Докладывает", data.employee),
               field("Нарушитель", data.department),
@@ -675,7 +662,7 @@
         if (formId === 3) {
           basePayload.embeds.push({
             title: "Рапорт о Медицинской Комиссии",
-            color: 0xd00000,
+            color: EMBED_COLOR,
             fields: [
               field("Докладывает боец", data.doctor1),
               field("Комиссия проведена бойцу", data.doctor2),
@@ -699,7 +686,7 @@
         if (formId === 4) {
           basePayload.embeds.push({
             title: "Рапорт о Дежурстве",
-            color: 0xd00000,
+            color: EMBED_COLOR,
             fields: [
               field("Дата дежурства", data.shiftDate, true),
               field("Разводящий", data.shiftLead, true),
@@ -718,7 +705,7 @@
         if (formId === 5) {
           basePayload.embeds.push({
             title: "Рапорт о Медицинской Деятельности",
-            color: 0xd00000,
+            color: EMBED_COLOR,
             fields: [
               field("Докладывает", data.reporter),
               field("Вид деятельности", data.activityType),
@@ -736,7 +723,7 @@
         if (formId === 6) {
           basePayload.embeds.push({
             title: "Рапорт о Тренировках",
-            color: 0xd00000,
+            color: EMBED_COLOR,
             fields: [
               field("Проводящий", data.trainer),
               field("Проходящий(-ие)", data.participants),
@@ -754,7 +741,7 @@
         if (formId === 7) {
           basePayload.embeds.push({
             title: "Рапорт о Спец.Операции",
-            color: getColorByResult(data.status),
+            color: EMBED_COLOR,
             fields: [
               field("Название операции", data.operationCode),
               field("Дата", data.date, true),
@@ -771,11 +758,9 @@
         }
 
         if (formId === 8) {
-          basePayload.username = "Медицинский портал";
-
           basePayload.embeds.push({
-            title: "📋 [8] Форма отчетов Лекций/Зачетов/Практик",
-            color: getColorByResult(data.result),
+            title: "Форма отчетов Лекций/Зачетов/Практик",
+            color: EMBED_COLOR,
             fields: [
               field("Тип", data.eventType, true),
               field("Название", data.title, true),
@@ -783,11 +768,9 @@
               field("Дата", data.date, true),
               field("Номер лекции/практики", data.lessonNumber || "—", true),
               field("Проходящий", data.student),
-              field("Итог", data.result, true)
+              field("Итог", data.result)
             ],
-            footer: {
-              text: "🔒 Защищённый канал · Медстатистика"
-            },
+            footer: { text: getNowText() },
             timestamp: new Date().toISOString()
           });
 
@@ -797,7 +780,7 @@
         if (formId === 9) {
           basePayload.embeds.push({
             title: "Дефектность — Заключение",
-            color: getColorByResult(data.result),
+            color: EMBED_COLOR,
             fields: [
               field("Состав комиссии", data.commission),
               field("Дата", data.date, true),
@@ -818,7 +801,7 @@
         if (formId === 10) {
           basePayload.embeds.push({
             title: "Дефектность — Постановление",
-            color: 0xd00000,
+            color: EMBED_COLOR,
             fields: [
               field("Состав комиссии", data.commission),
               field("Дата", data.date, true),
@@ -837,7 +820,7 @@
         if (formId === 11) {
           basePayload.embeds.push({
             title: "Рапорт о Наборной Деятельности",
-            color: 0xd00000,
+            color: EMBED_COLOR,
             fields: [
               field("Докладывает боец МК", data.reporter),
               field("Дата", data.date, true),
@@ -856,7 +839,7 @@
 
         basePayload.embeds.push({
           title: formName,
-          color: 0xd00000,
+          color: EMBED_COLOR,
           fields,
           footer: { text: getNowText() },
           timestamp: new Date().toISOString()
