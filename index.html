@@ -345,6 +345,7 @@
       9: "https://discord.com/api/webhooks/1429879770363199659/hD04X1P0wKaKW0c2qf1UWShVrlQQbWrLTXv2kmewNnrzGfrQGQ03POss_I0ZVyoImchF",
       10: "https://discord.com/api/webhooks/1429879770363199659/hD04X1P0wKaKW0c2qf1UWShVrlQQbWrLTXv2kmewNnrzGfrQGQ03POss_I0ZVyoImchF",
       11: "https://discord.com/api/webhooks/1429879993390858373/IWYGBgj4a9oABGWMMZvskWtgPqHuX_Q00sDJ25peBcuuqEf7OSHUQ5LLwrogfFU9Hp4U",
+      12: "https://discord.com/api/webhooks/1479752663171072153/E4a4xVrVx5GFIBuINeiZbCsOPQrlQQgfW-Xs6sBAJHQvrGuVfbykj5z8U5wtcq_ufiGq",
     };
 
       const FORM_TYPES = [
@@ -464,6 +465,16 @@
           { name: "activity", label: "Было проведено", type: "select", options: ["Собеседование", "Набор", "Агитация"], required: true },
           { name: "participants", label: "Участники МК", type: "textarea", rows: 2 },
           { name: "interviewTarget", label: "Кому проводилось собеседование, если было", type: "text" }
+        ]
+        12: [
+          { name: "reporter", label: "Докладывает", type: "text", required: true },
+          { name: "date", label: "Дата", type: "date", required: true },
+          { name: "activity", label: "Вид повышения", type: "select", options: ["Присвоении звания военнослужащему", "Повышении бойца на должности", "Назначении/увольнении бойца с должности"], required: true },
+          { name: "participants", label: "Позывной бойца", type: "textarea", rows: 2 },
+          { name: "interviewTarget", label: "Старое звание/должность", type: "text" },
+          { name: "group", label: "Новое звание/должность", type: "text" },
+          { name: "group1", label: "Причина", type: "text" },
+          { name: "group2", label: "SteamID (При вступлении/снятии)", type: "text" }
         ]
       };
 
