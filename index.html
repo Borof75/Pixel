@@ -886,8 +886,8 @@
               field("Подразделение", data.participants),
               field("Мин. кол-во бойцов от подразделения", data.interviewTarget),
               field("Дата проведения", data.date, true),
-              field("Время проведения", data.text),
-              field("Примечание: В случае неявки, всему подразделению будет назначен Плановый Медицинский Осмотр со Специалиста+.", data.group1)
+              field("Время проведения", data.group1),
+              field("Примечание: В случае неявки, всему подразделению будет назначен Плановый Медицинский Осмотр со Специалиста+.", data.group2)
             ],
             footer: { text: getNowText() },
             timestamp: new Date().toISOString()
