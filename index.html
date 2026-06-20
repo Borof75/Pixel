@@ -484,8 +484,9 @@
           { name: "activity", label: "Вид осмотра", type: "select", options: ["Плановый осмотр", "Внеплановый осмотр",], required: true },
           { name: "participants", label: "Подразделение", type: "select", options: ["41", "501", "212", "21", "Пилоты", "Гвардия", "Дис. бат", "Тренеры",], required: true },
           { name: "interviewTarget", label: "Мин. кол-во бойцов от подразделения", type: "text", required: true },
-          { name: "date", label: "Время и дата проведения", type: "date", required: true },
-          { name: "group1", label: "Примечание: В случае неявки, всему подразделению будет назначен Плановый Медицинский Осмотр со Специалиста+.", type: "text" }
+          { name: "date", label: "Дата проведения", type: "date", required: true },
+          { name: "group1", label: "Время проведения", type: "text", required: true },
+          { name: "group2", label: "Примечание: В случае неявки, всему подразделению будет назначен Плановый Медицинский Осмотр со Специалиста+.", type: "text" }
         ]
       };
 
@@ -884,7 +885,8 @@
               field("Вид осмотра", data.activity),
               field("Подразделение", data.participants),
               field("Мин. кол-во бойцов от подразделения", data.interviewTarget),
-              field("Время и дата проведения", data.date, true),
+              field("Дата проведения", data.date, true),
+              field("Время проведения", data.text),
               field("Примечание: В случае неявки, всему подразделению будет назначен Плановый Медицинский Осмотр со Специалиста+.", data.group1)
             ],
             footer: { text: getNowText() },
