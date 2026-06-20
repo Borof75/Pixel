@@ -875,6 +875,24 @@
 
           return basePayload;
         }
+       if (formId === 13) {
+          basePayload.embeds.push({
+            title: "Форма для осмотров",
+            color: EMBED_COLOR,
+            fields: [
+              field("Докладывает", data.reporter),
+              field("Вид осмотра", data.activity),
+              field("Подразделение", data.participants),
+              field("Мин. кол-во бойцов от подразделения", data.interviewTarget),
+              field("Время и дата проведения", data.date, true),
+              field("Примечание: В случае неявки, всему подразделению будет назначен Плановый Медицинский Осмотр со Специалиста+.", data.group1),
+            ],
+            footer: { text: getNowText() },
+            timestamp: new Date().toISOString()
+          });
+
+          return basePayload;
+        }
 
         const fields = Object.entries(data).map(([key, value]) => field(key, value));
 
