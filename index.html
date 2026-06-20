@@ -346,7 +346,7 @@
       10: "https://discord.com/api/webhooks/1429879770363199659/hD04X1P0wKaKW0c2qf1UWShVrlQQbWrLTXv2kmewNnrzGfrQGQ03POss_I0ZVyoImchF",
       11: "https://discord.com/api/webhooks/1429879993390858373/IWYGBgj4a9oABGWMMZvskWtgPqHuX_Q00sDJ25peBcuuqEf7OSHUQ5LLwrogfFU9Hp4U",
       12: "https://discord.com/api/webhooks/1479752663171072153/E4a4xVrVx5GFIBuINeiZbCsOPQrlQQgfW-Xs6sBAJHQvrGuVfbykj5z8U5wtcq_ufiGq",
-      13: "https://discord.com/api/webhooks/1517681714107781240/RFOQ4XOrXla71GQkESOBm7IZiugToNUsIzM1DhUonMByR6RCGJP9yb86GoXJ8YK5YOyZ",
+      13: "https://discord.com/api/webhooks/1517681714107781240/RFOQ4XOrXla71GQkESOBm7IZiugToNUsIzM1DhUonMByR6RCGJP9yb86GoXJ8YK5YOyZ"
     };
 
       const FORM_TYPES = [
@@ -362,7 +362,7 @@
         { id: 10, name: "[10] Дефектность (Постановление)" },
         { id: 11, name: "[11] Форма отчетов Наборной деятельности" },
         { id: 12, name: "[12] Форма отчета для КМД" },
-        { id: 13, name: "[13] Форма Мед. осмотров" },
+        { id: 13, name: "[13] Форма Мед. осмотров" }
       ];
 
       const FIELDS_MAP = {
@@ -485,7 +485,7 @@
           { name: "participants", label: "Подразделение", type: "select", options: ["41", "501", "212", "21", "Пилоты", "Гвардия", "Дис. бат", "Тренеры",], required: true },
           { name: "interviewTarget", label: "Мин. кол-во бойцов от подразделения", type: "text", required: true },
           { name: "date", label: "Время и дата проведения", type: "date", required: true },
-          { name: "group1", label: "Примечание: В случае неявки, всему подразделению будет назначен Плановый Медицинский Осмотр со Специалиста+.", },
+          { name: "group1", label: "Примечание: В случае неявки, всему подразделению будет назначен Плановый Медицинский Осмотр со Специалиста+.", }
         ]
       };
 
@@ -885,7 +885,7 @@
               field("Подразделение", data.participants),
               field("Мин. кол-во бойцов от подразделения", data.interviewTarget),
               field("Время и дата проведения", data.date, true),
-              field("Примечание: В случае неявки, всему подразделению будет назначен Плановый Медицинский Осмотр со Специалиста+.", data.group1),
+              field("Примечание: В случае неявки, всему подразделению будет назначен Плановый Медицинский Осмотр со Специалиста+.", data.group1)
             ],
             footer: { text: getNowText() },
             timestamp: new Date().toISOString()
